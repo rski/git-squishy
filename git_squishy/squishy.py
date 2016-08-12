@@ -23,24 +23,30 @@ class NoSuchBranchException(SquishyException):
     EXIT_CODE = 3
 
 
+class NoCurrentBranchException(SquishyException):
+    EXIT_CODE = 4
+
+
+def run_cmd(cmd, exception_klazz=None, exception_msg=None):
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    (out, err) = p.communicate()
+    exit_code = p.returncode
+    if exit_code != 0 and exception_klazz:
+        raise exception_klazz(exception_msg)
+    return (out, err, exit_code)
+
+
 def get_current_branch():
     """Return the current branch's name."""
-    # current_branch = git rev-parse --abbrev-ref HEAD
-    # assert_branch_exists(branch)
-    # return current_branch
-    return "test"
+    cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+    (current_branch, _, _) = run_cmd(cmd, NoCurrentBranchException, "Could not get current branch")
+    return current_branch.strip()
 
 
 def assert_branch_exists(branch):
-    """Check if a branch exists, exit if not."""
+    """Check if a branch exists, raise an exception if not."""
     cmd = ['git', 'rev-parse', '--verify', branch]
-    p = subprocess.Popen(cmd,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT
-                        )
-    (_, _) = p.communicate()
-    if p.returncode != 0:
-        raise NoSuchBranchException("Branch %s does not exist." % branch)
+    run_cmd(cmd, NoSuchBranchException, "Branch %s does not exist." % branch)
 
 
 def get_base_branch():
