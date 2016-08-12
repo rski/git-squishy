@@ -10,10 +10,12 @@ class SquishyException(Exception):
 
 
 class TooManyArgumentsException(SquishyException):
+    """Only specify the base branch as an argument."""
     EXIT_CODE = 1
 
 
 class NoBaseBranchException(SquishyException):
+    """No base branch specified."""
     EXIT_CODE = 2
 
 
@@ -35,20 +37,18 @@ def assert_branch_exists(branch):
     p = subprocess.Popen(cmd,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.STDOUT
-                         )
-    (out, _) = p.communicate()
-    if (p.returncode != 0):
-        sys.exit(NoSuchBranchException.EXIT_CODE)
+                        )
+    (_, _) = p.communicate()
+    if p.returncode != 0:
+        raise NoSuchBranchException("Branch %s does not exist." % branch)
 
 
 def get_base_branch():
     """Get the base branch name if specified in arguments."""
     if len(sys.argv) > 2:
-        print("Only specify the base branch as an argument.")
-        sys.exit(TooManyArgumentsException.EXIT_CODE)
+        raise TooManyArgumentsException("More than one arguments specified. The only argument should be the base branch.")
     elif len(sys.argv) < 2:
-        print("No base branch specified.")
-        sys.exit(NoBaseBranchException.EXIT_CODE)
+        raise NoBaseBranchException("Base branch name not specified.")
     else:
         base_branch = sys.argv[1]
         assert_branch_exists(base_branch)
@@ -67,8 +67,22 @@ def squash(current_branch, commit_n):
     pass
 
 
-def main():
+def _main():
     base_branch = get_base_branch()
     current_branch = get_current_branch()
     commit_number = get_diverged_commits(current_branch, base_branch)
     squash(current_branch, commit_number)
+
+
+def main():
+    try:
+        _main()
+    except SquishyException as e:
+        try:
+            u = unicode(e)
+        except NameError:
+            print(e)
+        else:
+            print(u.encode('utf-8'))
+
+        sys.exit(e.EXIT_CODE)
