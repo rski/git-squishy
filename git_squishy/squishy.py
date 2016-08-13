@@ -80,8 +80,8 @@ def squash(commit_n):
         run_cmd(reset)
         get_logs = 'git log --format=%B --reverse HEAD..HEAD@{1}'.split()
         (logs, _, _) = run_cmd(get_logs)
-        commit_again = ['git', 'commit', '-m%s' % logs]
-        run_cmd(commit_again)
+        commit_again = ['git', 'commit', '--edit', '-m%s' % logs]
+        subprocess.call(commit_again)
 
 
 def _main():
