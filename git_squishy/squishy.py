@@ -37,13 +37,6 @@ def run_cmd(cmd, exception_klazz=None, exception_msg=None):
     return (out.strip(), err, exit_code)
 
 
-def get_current_branch():
-    """Return the current branch's name."""
-    cmd = ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
-    (current_branch, _, _) = run_cmd(cmd, NoCurrentBranchException, "Could not get current branch")
-    return current_branch.strip()
-
-
 def assert_branch_exists(branch):
     """Check if a branch exists, raise an exception if not."""
     cmd = ['git', 'rev-parse', '--verify', branch]
@@ -78,7 +71,7 @@ def get_diverged_commits(base_branch):
     return commit_n
 
 
-def squash(current_branch, commit_n):
+def squash(commit_n):
     """Squash $commit_n commits on current_branch."""
     if commit_n <= 1:
         return
@@ -93,9 +86,8 @@ def squash(current_branch, commit_n):
 
 def _main():
     base_branch = get_base_branch()
-    current_branch = get_current_branch()
     commit_number = get_diverged_commits(base_branch)
-    squash(current_branch, commit_number)
+    squash(commit_number)
 
 
 def main():
