@@ -80,7 +80,15 @@ def get_diverged_commits(base_branch):
 
 def squash(current_branch, commit_n):
     """Squash $commit_n commits on current_branch."""
-    pass
+    if commit_n <= 1:
+        return
+    else:
+        reset = ['git', 'reset', '--soft', 'HEAD~%s' % commit_n]
+        run_cmd(reset)
+        get_logs = 'git log --format=%B --reverse HEAD..HEAD@{1}'.split()
+        (logs, _, _) = run_cmd(get_logs)
+        commit_again = ['git', 'commit', '-m%s' % logs]
+        run_cmd(commit_again)
 
 
 def _main():
