@@ -29,11 +29,12 @@ class NoCurrentBranchException(SquishyException):
 
 def run_cmd(cmd, exception_klazz=None, exception_msg=None):
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    (out, err) = p.communicate()
+    (out, err) = p.communicate('stdout')
+    out = out.decode('utf-8', 'replace')
     exit_code = p.returncode
     if exit_code != 0 and exception_klazz:
         raise exception_klazz(exception_msg)
-    return (out, err, exit_code)
+    return (out.strip(), err, exit_code)
 
 
 def get_current_branch():
@@ -62,10 +63,19 @@ def get_base_branch():
     return base_branch
 
 
-def get_diverged_commits(current_branch, base_branch):
+def get_diverged_commits(base_branch):
     """Get the number of commits diverged from `base_branch`."""
+
     # git log base_branch..current_branch --pretty=oneline | count
-    return 0
+    cmd = ['git', 'log', str(base_branch) + '..', '--pretty=oneline']
+    # TODO(rski) implement an exception for this?
+    (out, _, _) = run_cmd(cmd)
+    if out:
+        commit_n = out.count("\n") + 1
+    else:
+        commit_n = 0
+
+    return commit_n
 
 
 def squash(current_branch, commit_n):
@@ -76,11 +86,12 @@ def squash(current_branch, commit_n):
 def _main():
     base_branch = get_base_branch()
     current_branch = get_current_branch()
-    commit_number = get_diverged_commits(current_branch, base_branch)
+    commit_number = get_diverged_commits(base_branch)
     squash(current_branch, commit_number)
 
 
 def main():
+    """Main"""
     try:
         _main()
     except SquishyException as e:
