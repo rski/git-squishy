@@ -1,0 +1,12 @@
+CHANGES
+=======
+
+* Spawn editor
+* Remove unneeded get_current_branch
+* Implement squashing functionality
+* Implement get_diverged_commits, unicode support
+* Implement get_current_branch
+* Implement proper exception raising
+* Implement assert_branch_exists, change skeleton
+* Get base_branch from args, add skeleton defs
+* Initial commit
